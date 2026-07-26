@@ -26,6 +26,9 @@ let command = process.argv
 const migrationsPattern = new RegExp(`${databaseProviderDefault}-migrations`, 'g');
 command = command.replace(migrationsPattern, migrationsFolder);
 
+// Strip --schema flag so Prisma loads prisma.config.ts for the datasource URL
+command = command.replace(/ --schema\s+\S+/g, '');
+
 if (command.includes('rmdir') && existsSync('prisma\\migrations')) {
   try {
     execSync('rmdir /S /Q prisma\\migrations', { stdio: 'inherit' });
