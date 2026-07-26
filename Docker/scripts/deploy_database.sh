@@ -21,12 +21,19 @@ if [[ "$DATABASE_PROVIDER" == "postgresql" || "$DATABASE_PROVIDER" == "mysql" ||
     ' .env > .env.tmp && mv .env.tmp .env
     echo "Updated DATABASE vars in .env"
 
-    npm run db:deploy
+    echo "Syncing database schema with prisma db push..."
+    npx prisma db push --accept-data-loss
     if [ $? -ne 0 ]; then
-        echo "Migration failed"
-        exit 1
+        echo "Schema push failed, falling back to migrate deploy..."
+        npm run db:deploy
+        if [ $? -ne 0 ]; then
+            echo "Migration failed"
+            exit 1
+        else
+            echo "Migration succeeded"
+        fi
     else
-        echo "Migration succeeded"
+        echo "Schema push succeeded"
     fi
     npm run db:generate
     if [ $? -ne 0 ]; then
