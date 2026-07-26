@@ -4,8 +4,13 @@ const { existsSync } = require('fs');
 
 dotenv.config();
 
-const { DATABASE_PROVIDER } = process.env;
+const { DATABASE_PROVIDER, DATABASE_CONNECTION_URI, DATABASE_URL } = process.env;
 const databaseProviderDefault = DATABASE_PROVIDER ?? 'postgresql';
+
+// Prisma requires DATABASE_URL; map it from DATABASE_CONNECTION_URI if not already set
+if (!DATABASE_URL && DATABASE_CONNECTION_URI) {
+  process.env.DATABASE_URL = DATABASE_CONNECTION_URI;
+}
 
 if (!DATABASE_PROVIDER) {
   console.warn(`DATABASE_PROVIDER is not set in the .env file, using default: ${databaseProviderDefault}`);
