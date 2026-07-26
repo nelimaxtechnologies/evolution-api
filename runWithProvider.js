@@ -2,15 +2,25 @@ const dotenv = require('dotenv');
 const { execSync } = require('child_process');
 const { existsSync } = require('fs');
 
+const { DATABASE_PROVIDER, DATABASE_CONNECTION_URI, DATABASE_URL } = process.env;
+
+// If DATABASE_CONNECTION_URI is not set, derive it from DATABASE_URL
+if (!DATABASE_CONNECTION_URI && DATABASE_URL) {
+  process.env.DATABASE_CONNECTION_URI = DATABASE_URL;
+}
+
+// Load .env AFTER checking Render env vars so Render vars take precedence
 dotenv.config();
 
-const { DATABASE_PROVIDER, DATABASE_CONNECTION_URI, DATABASE_URL } = process.env;
-const databaseProviderDefault = DATABASE_PROVIDER ?? 'postgresql';
-
-// Prisma requires DATABASE_URL; map it from DATABASE_CONNECTION_URI if not already set
-if (!DATABASE_URL && DATABASE_CONNECTION_URI) {
-  process.env.DATABASE_URL = DATABASE_CONNECTION_URI;
+// Ensure DATABASE_CONNECTION_URI set by Render overrides any .env dummy value
+if (DATABASE_CONNECTION_URI) {
+  process.env.DATABASE_CONNECTION_URI = DATABASE_CONNECTION_URI;
 }
+if (DATABASE_URL) {
+  process.env.DATABASE_URL = DATABASE_URL;
+}
+
+const databaseProviderDefault = process.env.DATABASE_PROVIDER ?? 'postgresql';
 
 if (!DATABASE_PROVIDER) {
   console.warn(`DATABASE_PROVIDER is not set in the .env file, using default: ${databaseProviderDefault}`);

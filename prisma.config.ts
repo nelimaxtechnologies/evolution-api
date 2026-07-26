@@ -4,9 +4,6 @@ import path from 'node:path';
 
 import { defineConfig, env } from 'prisma/config';
 
-// Prisma 7: a connection string saiu do schema e vive aqui (datasource.url),
-// e o schema/migrations são selecionados dinamicamente pelo DATABASE_PROVIDER
-// (mesma lógica multi-provider do runWithProvider.js).
 const provider = process.env.DATABASE_PROVIDER ?? 'postgresql';
 
 const schemaFile =
@@ -16,13 +13,15 @@ const schemaFile =
       ? 'psql_bouncer-schema.prisma'
       : 'postgresql-schema.prisma';
 
+// Prisma 7 reads the URL from here. Prefer DATABASE_CONNECTION_URI, fall back to DATABASE_URL.
+const dbUrl = process.env.DATABASE_CONNECTION_URI || process.env.DATABASE_URL || '';
+
 export default defineConfig({
   schema: path.join('prisma', schemaFile),
-  // Os scripts db:* copiam as migrations do provider ativo para prisma/migrations
   migrations: {
     path: path.join('prisma', 'migrations'),
   },
   datasource: {
-    url: env('DATABASE_CONNECTION_URI'),
+    url: dbUrl,
   },
 });
