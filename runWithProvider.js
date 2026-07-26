@@ -1,16 +1,7 @@
-const dotenv = require('dotenv');
 const { execSync } = require('child_process');
 const { existsSync } = require('fs');
 
-const savedConnUri = process.env.DATABASE_CONNECTION_URI;
-const savedDbUrl = process.env.DATABASE_URL;
-
-dotenv.config();
-
-if (savedConnUri) process.env.DATABASE_CONNECTION_URI = savedConnUri;
-if (savedDbUrl) process.env.DATABASE_URL = savedDbUrl;
-
-const databaseProviderDefault = (savedConnUri ? process.env.DATABASE_PROVIDER : null) ?? process.env.DATABASE_PROVIDER ?? 'postgresql';
+const databaseProviderDefault = process.env.DATABASE_PROVIDER ?? 'postgresql';
 
 if (!process.env.DATABASE_PROVIDER) {
   console.warn(`DATABASE_PROVIDER is not set, using default: ${databaseProviderDefault}`);
