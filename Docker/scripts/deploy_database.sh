@@ -11,11 +11,18 @@ if [[ "$DATABASE_PROVIDER" == "postgresql" || "$DATABASE_PROVIDER" == "mysql" ||
     export DATABASE_CONNECTION_URI
     echo "Deploying migrations for $DATABASE_PROVIDER"
     echo "Database URL: $DATABASE_CONNECTION_URI"
-    # Remove .env so dotenv/dotenvx in prisma.config.ts cannot override Render env vars
-    mv .env .env.bak 2>/dev/null || true
+    # Write .env.local with real Render env vars so Prisma/dotenvx picks them up
+    # (.env.local takes precedence over .env and won't be overridden)
+    rm -f .env .env.local 2>/dev/null || true
+    cat > .env.local <<EOF
+DATABASE_PROVIDER=$DATABASE_PROVIDER
+DATABASE_CONNECTION_URI=$DATABASE_CONNECTION_URI
+DATABASE_URL=$DATABASE_URL
+EOF
     npm run db:deploy
-    if [ $? -ne 0 ]; then
-        mv .env.bak .env 2>/dev/null || true
+    deploy_status=$?
+    rm -f .env.local 2>/dev/null || true
+    if [ $deploy_status -ne 0 ]; then
         echo "Migration failed"
         exit 1
     else
@@ -23,13 +30,11 @@ if [[ "$DATABASE_PROVIDER" == "postgresql" || "$DATABASE_PROVIDER" == "mysql" ||
     fi
     npm run db:generate
     if [ $? -ne 0 ]; then
-        mv .env.bak .env 2>/dev/null || true
         echo "Prisma generate failed"
         exit 1
     else
         echo "Prisma generate succeeded"
     fi
-    mv .env.bak .env 2>/dev/null || true
 else
     echo "Error: Database provider $DATABASE_PROVIDER invalid."
     exit 1

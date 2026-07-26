@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { defineConfig } from 'prisma/config';
+import { defineConfig, env } from 'prisma/config';
 
 const provider = process.env.DATABASE_PROVIDER ?? 'postgresql';
 
@@ -17,6 +17,6 @@ export default defineConfig({
     path: path.join('prisma', 'migrations'),
   },
   datasource: {
-    url: process.env.DATABASE_CONNECTION_URI || process.env.DATABASE_URL || '',
+    url: env('DATABASE_CONNECTION_URI'),
   },
 });
