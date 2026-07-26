@@ -12,13 +12,13 @@ if [[ "$DATABASE_PROVIDER" == "postgresql" || "$DATABASE_PROVIDER" == "mysql" ||
     echo "Deploying migrations for $DATABASE_PROVIDER"
     echo "Database URL: $DATABASE_CONNECTION_URI"
 
-    # Replace only DATABASE vars in .env using sed (preserves all other 250+ config vars)
-    sed -i "s|^DATABASE_PROVIDER=.*|DATABASE_PROVIDER=$DATABASE_PROVIDER|" .env
-    sed -i "s|^DATABASE_CONNECTION_URI=.*|DATABASE_CONNECTION_URI=$DATABASE_CONNECTION_URI|" .env
-    # Append if not already present
-    grep -q '^DATABASE_PROVIDER=' .env || echo "DATABASE_PROVIDER=$DATABASE_PROVIDER" >> .env
-    grep -q '^DATABASE_CONNECTION_URI=' .env || echo "DATABASE_CONNECTION_URI=$DATABASE_CONNECTION_URI" >> .env
-    grep -q '^DATABASE_URL=' .env || echo "DATABASE_URL=$DATABASE_URL" >> .env
+    # Update only DATABASE vars in .env using awk (safe with special chars in URLs)
+    awk -v dp="$DATABASE_PROVIDER" -v dc="$DATABASE_CONNECTION_URI" -v du="$DATABASE_URL" '
+      /^DATABASE_PROVIDER=/ { print "DATABASE_PROVIDER=" dp; next }
+      /^DATABASE_CONNECTION_URI=/ { print "DATABASE_CONNECTION_URI=" dc; next }
+      /^DATABASE_URL=/ { print "DATABASE_URL=" du; next }
+      { print }
+    ' .env > .env.tmp && mv .env.tmp .env
     echo "Updated DATABASE vars in .env"
 
     npm run db:deploy
