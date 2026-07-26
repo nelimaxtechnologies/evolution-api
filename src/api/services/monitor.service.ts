@@ -239,27 +239,40 @@ export class WAMonitoringService {
   }
 
   public async saveInstance(data: any) {
-    try {
-      const clientName = await this.configService.get<Database>('DATABASE').CONNECTION.CLIENT_NAME;
-      await this.prismaRepository.instance.create({
-        data: {
-          id: data.instanceId,
-          name: data.instanceName,
-          ownerJid: data.ownerJid,
-          profileName: data.profileName,
-          profilePicUrl: data.profilePicUrl,
-          connectionStatus:
-            data.integration && data.integration === Integration.WHATSAPP_BAILEYS ? 'close' : (data.status ?? 'open'),
-          number: data.number,
-          integration: data.integration || Integration.WHATSAPP_BAILEYS,
-          token: data.hash,
-          clientName: clientName,
-          businessId: data.businessId,
-        },
-      });
-    } catch (error) {
-      this.logger.error(error);
-    }
+    const clientName = await this.configService.get<Database>('DATABASE').CONNECTION.CLIENT_NAME;
+
+    await this.prismaRepository.instance.upsert({
+      where: {
+        id: data.instanceId,
+      },
+      update: {
+        name: data.instanceName,
+        ownerJid: data.ownerJid,
+        profileName: data.profileName,
+        profilePicUrl: data.profilePicUrl,
+        connectionStatus:
+          data.integration && data.integration === Integration.WHATSAPP_BAILEYS ? 'close' : (data.status ?? 'open'),
+        number: data.number,
+        integration: data.integration || Integration.WHATSAPP_BAILEYS,
+        token: data.hash,
+        clientName: clientName,
+        businessId: data.businessId,
+      },
+      create: {
+        id: data.instanceId,
+        name: data.instanceName,
+        ownerJid: data.ownerJid,
+        profileName: data.profileName,
+        profilePicUrl: data.profilePicUrl,
+        connectionStatus:
+          data.integration && data.integration === Integration.WHATSAPP_BAILEYS ? 'close' : (data.status ?? 'open'),
+        number: data.number,
+        integration: data.integration || Integration.WHATSAPP_BAILEYS,
+        token: data.hash,
+        clientName: clientName,
+        businessId: data.businessId,
+      },
+    });
   }
 
   public deleteInstance(instanceName: string) {
