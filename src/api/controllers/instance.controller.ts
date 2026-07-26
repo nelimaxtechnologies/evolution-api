@@ -307,8 +307,9 @@ export class InstanceController {
       };
     } catch (error) {
       this.waMonitor.deleteInstance(instanceData.instanceName);
-      this.logger.error(isArray(error.message) ? error.message[0] : error.message);
-      throw new BadRequestException(isArray(error.message) ? error.message[0] : error.message);
+      const msg = error?.message || error?.toString() || 'Unknown error';
+      this.logger.error(msg);
+      throw new BadRequestException(msg);
     }
   }
 
