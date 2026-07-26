@@ -11,10 +11,14 @@ if [[ "$DATABASE_PROVIDER" == "postgresql" || "$DATABASE_PROVIDER" == "mysql" ||
     export DATABASE_CONNECTION_URI
     echo "=== Deploying database for $DATABASE_PROVIDER ==="
 
-    # If DATABASE_URL is empty, derive it from DATABASE_CONNECTION_URI
+    # Bridge DATABASE_URL ↔ DATABASE_CONNECTION_URI so both are always available
     if [ -z "$DATABASE_URL" ] && [ -n "$DATABASE_CONNECTION_URI" ]; then
         export DATABASE_URL="$DATABASE_CONNECTION_URI"
         echo "DATABASE_URL was empty, set from DATABASE_CONNECTION_URI"
+    fi
+    if [ -z "$DATABASE_CONNECTION_URI" ] && [ -n "$DATABASE_URL" ]; then
+        export DATABASE_CONNECTION_URI="$DATABASE_URL"
+        echo "DATABASE_CONNECTION_URI was empty, set from DATABASE_URL"
     fi
 
     echo "DATABASE_CONNECTION_URI is set: $([ -n "$DATABASE_CONNECTION_URI" ] && echo 'YES' || echo 'NO')"

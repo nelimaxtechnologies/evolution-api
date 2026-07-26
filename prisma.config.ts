@@ -25,7 +25,11 @@ function readEnvFile(key: string): string {
 
 const provider = process.env.DATABASE_PROVIDER ?? 'postgresql';
 
-const dbUrl = process.env.DATABASE_CONNECTION_URI || readEnvFile('DATABASE_CONNECTION_URI');
+const dbUrl =
+  process.env.DATABASE_CONNECTION_URI ||
+  process.env.DATABASE_URL ||
+  readEnvFile('DATABASE_CONNECTION_URI') ||
+  readEnvFile('DATABASE_URL');
 
 const schemaFile =
   provider === 'mysql'
