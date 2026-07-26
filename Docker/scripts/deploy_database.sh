@@ -12,21 +12,14 @@ if [[ "$DATABASE_PROVIDER" == "postgresql" || "$DATABASE_PROVIDER" == "mysql" ||
     echo "Deploying migrations for $DATABASE_PROVIDER"
     echo "Database URL: $DATABASE_CONNECTION_URI"
 
-    # Prisma's internal dotenvx reads .env from disk and overrides process.env.
-    # Overwrite .env with real Render credentials BEFORE Prisma runs.
-    cat > .env <<ENVEOF
-DATABASE_PROVIDER=$DATABASE_PROVIDER
-DATABASE_CONNECTION_URI=$DATABASE_CONNECTION_URI
-DATABASE_URL=$DATABASE_URL
-AUTHENTICATION_API_KEY=${AUTHENTICATION_API_KEY:-429683C4C977415CAAFCCE10F7D57E11}
-AUTHENTICATION_API_ACCESS=${AUTHENTICATION_API_ACCESS:-true}
-AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=${AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES:-true}
-SERVER_PORT=${SERVER_PORT:-8080}
-SERVER_TYPE=${SERVER_TYPE:-http}
-LOG_LEVEL=${LOG_LEVEL:-warn}
-DEL_INSTANCE=${DEL_INSTANCE:-false}
-ENVEOF
-    echo "Wrote real credentials to .env"
+    # Replace only DATABASE vars in .env using sed (preserves all other 250+ config vars)
+    sed -i "s|^DATABASE_PROVIDER=.*|DATABASE_PROVIDER=$DATABASE_PROVIDER|" .env
+    sed -i "s|^DATABASE_CONNECTION_URI=.*|DATABASE_CONNECTION_URI=$DATABASE_CONNECTION_URI|" .env
+    # Append if not already present
+    grep -q '^DATABASE_PROVIDER=' .env || echo "DATABASE_PROVIDER=$DATABASE_PROVIDER" >> .env
+    grep -q '^DATABASE_CONNECTION_URI=' .env || echo "DATABASE_CONNECTION_URI=$DATABASE_CONNECTION_URI" >> .env
+    grep -q '^DATABASE_URL=' .env || echo "DATABASE_URL=$DATABASE_URL" >> .env
+    echo "Updated DATABASE vars in .env"
 
     npm run db:deploy
     if [ $? -ne 0 ]; then
