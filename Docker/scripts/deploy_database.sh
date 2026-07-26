@@ -11,18 +11,16 @@ if [[ "$DATABASE_PROVIDER" == "postgresql" || "$DATABASE_PROVIDER" == "mysql" ||
     export DATABASE_CONNECTION_URI
     echo "Deploying migrations for $DATABASE_PROVIDER"
     echo "Database URL: $DATABASE_CONNECTION_URI"
-    # Write .env.local with real Render env vars so Prisma/dotenvx picks them up
-    # (.env.local takes precedence over .env and won't be overridden)
-    rm -f .env .env.local 2>/dev/null || true
+    # .env.local takes precedence over .env in dotenvx — write real creds here
     cat > .env.local <<EOF
 DATABASE_PROVIDER=$DATABASE_PROVIDER
 DATABASE_CONNECTION_URI=$DATABASE_CONNECTION_URI
 DATABASE_URL=$DATABASE_URL
 EOF
+    echo "Wrote .env.local with DATABASE_CONNECTION_URI set"
     npm run db:deploy
-    deploy_status=$?
-    rm -f .env.local 2>/dev/null || true
-    if [ $deploy_status -ne 0 ]; then
+    if [ $? -ne 0 ]; then
+        rm -f .env.local
         echo "Migration failed"
         exit 1
     else
@@ -30,11 +28,13 @@ EOF
     fi
     npm run db:generate
     if [ $? -ne 0 ]; then
+        rm -f .env.local
         echo "Prisma generate failed"
         exit 1
     else
         echo "Prisma generate succeeded"
     fi
+    rm -f .env.local
 else
     echo "Error: Database provider $DATABASE_PROVIDER invalid."
     exit 1
