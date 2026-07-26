@@ -11,10 +11,11 @@ if [[ "$DATABASE_PROVIDER" == "postgresql" || "$DATABASE_PROVIDER" == "mysql" ||
     export DATABASE_CONNECTION_URI
     echo "Deploying migrations for $DATABASE_PROVIDER"
     echo "Database URL: $DATABASE_CONNECTION_URI"
-    # rm -rf ./prisma/migrations
-    # cp -r ./prisma/$DATABASE_PROVIDER-migrations ./prisma/migrations
+    # Remove .env so dotenv/dotenvx in prisma.config.ts cannot override Render env vars
+    mv .env .env.bak 2>/dev/null || true
     npm run db:deploy
     if [ $? -ne 0 ]; then
+        mv .env.bak .env 2>/dev/null || true
         echo "Migration failed"
         exit 1
     else
@@ -22,11 +23,13 @@ if [[ "$DATABASE_PROVIDER" == "postgresql" || "$DATABASE_PROVIDER" == "mysql" ||
     fi
     npm run db:generate
     if [ $? -ne 0 ]; then
+        mv .env.bak .env 2>/dev/null || true
         echo "Prisma generate failed"
         exit 1
     else
         echo "Prisma generate succeeded"
     fi
+    mv .env.bak .env 2>/dev/null || true
 else
     echo "Error: Database provider $DATABASE_PROVIDER invalid."
     exit 1

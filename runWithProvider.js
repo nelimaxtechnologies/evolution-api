@@ -2,28 +2,20 @@ const dotenv = require('dotenv');
 const { execSync } = require('child_process');
 const { existsSync } = require('fs');
 
-const { DATABASE_PROVIDER, DATABASE_CONNECTION_URI, DATABASE_URL } = process.env;
+// Capture Render env vars before .env can override them
+const savedConnUri = process.env.DATABASE_CONNECTION_URI;
+const savedDbUrl = process.env.DATABASE_URL;
 
-// If DATABASE_CONNECTION_URI is not set, derive it from DATABASE_URL
-if (!DATABASE_CONNECTION_URI && DATABASE_URL) {
-  process.env.DATABASE_CONNECTION_URI = DATABASE_URL;
-}
-
-// Load .env AFTER checking Render env vars so Render vars take precedence
 dotenv.config();
 
-// Ensure DATABASE_CONNECTION_URI set by Render overrides any .env dummy value
-if (DATABASE_CONNECTION_URI) {
-  process.env.DATABASE_CONNECTION_URI = DATABASE_CONNECTION_URI;
-}
-if (DATABASE_URL) {
-  process.env.DATABASE_URL = DATABASE_URL;
-}
+// Restore Render env vars (they must win over .env defaults)
+if (savedConnUri) process.env.DATABASE_CONNECTION_URI = savedConnUri;
+if (savedDbUrl) process.env.DATABASE_URL = savedDbUrl;
 
-const databaseProviderDefault = process.env.DATABASE_PROVIDER ?? 'postgresql';
+const databaseProviderDefault = (savedConnUri ? process.env.DATABASE_PROVIDER : null) ?? process.env.DATABASE_PROVIDER ?? 'postgresql';
 
-if (!DATABASE_PROVIDER) {
-  console.warn(`DATABASE_PROVIDER is not set in the .env file, using default: ${databaseProviderDefault}`);
+if (!process.env.DATABASE_PROVIDER) {
+  console.warn(`DATABASE_PROVIDER is not set, using default: ${databaseProviderDefault}`);
 }
 
 // Função para determinar qual pasta de migrations usar
